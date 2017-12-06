@@ -53,14 +53,42 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
         setVarModel(new File("testdata/ANestedInB.cnf"));
         
         // Mock code file: B is nested in A
-        Variable varA = new Variable("A");
-        Variable varB = new Variable("B");
+        Variable varA = new Variable("ALPHA");
+        Variable varB = new Variable("BETA");
         CodeElement element = new CodeBlock(varA);
         CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
         element.addNestedElement(nestedElement);
         List<VariableWithFeatureEffect> results = detectConfigMismatches(element);
         
+        // One mismatch detected
         Assert.assertEquals(1, results.size());
+        
+        // Problematic variable is B, which is always nested below A, which is not covered by the variability model
+        VariableWithFeatureEffect var = results.get(0);
+        Assert.assertEquals("BETA", var.getVariable());
+        
+        // Not covered (precondition) constraint for B is: A
+        Assert.assertEquals("ALPHA", var.getFeatureEffect().toString());
+    }
+    
+    /**
+     * Tests if a code nesting is not reported if it is used in the same way as specified by the variability model.
+     */
+    @Test
+    public void testNoFalseReportForCorrectUsage() {
+        // Load Variability Model: A is nested in B
+        setVarModel(new File("testdata/ANestedInB.cnf"));
+        
+        // Mock code file: A is nested in B
+        Variable varA = new Variable("ALPHA");
+        Variable varB = new Variable("BETA");
+        CodeElement element = new CodeBlock(varB);
+        CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
+        element.addNestedElement(nestedElement);
+        List<VariableWithFeatureEffect> results = detectConfigMismatches(element);
+        
+        // One mismatch detected
+        Assert.assertEquals(0, results.size());
     }
 
     /**
