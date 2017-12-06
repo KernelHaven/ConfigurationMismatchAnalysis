@@ -14,7 +14,6 @@ import net.ssehub.kernel_haven.analysis.AnalysisComponent;
 import net.ssehub.kernel_haven.code_model.CodeBlock;
 import net.ssehub.kernel_haven.code_model.CodeElement;
 import net.ssehub.kernel_haven.code_model.SourceFile;
-import net.ssehub.kernel_haven.fe_analysis.AbstractFinderTests;
 import net.ssehub.kernel_haven.fe_analysis.Settings.SimplificationType;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder.VariableWithFeatureEffect;
