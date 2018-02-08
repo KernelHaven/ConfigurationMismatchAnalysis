@@ -17,6 +17,7 @@ import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder;
 import net.ssehub.kernel_haven.fe_analysis.pcs.PcFinder;
 import net.ssehub.kernel_haven.test_utils.TestAnalysisComponentProvider;
 import net.ssehub.kernel_haven.test_utils.TestConfiguration;
+import net.ssehub.kernel_haven.util.null_checks.NonNull;
 
 /**
  * Common part for the different kind of {@link PcFinder} tests, copied from Feature Effect Analysis test cases,
@@ -26,6 +27,7 @@ import net.ssehub.kernel_haven.test_utils.TestConfiguration;
  * @author El-Sharkawy
  *
  */
+@SuppressWarnings("null")
 public abstract class AbstractFinderTests<R> {
     
     /**
@@ -81,6 +83,6 @@ public abstract class AbstractFinderTests<R> {
      * @return The analysis component.
      * @throws SetUpException If analysis fails.
      */
-    protected abstract AnalysisComponent<R> callAnalysor(TestConfiguration tConfig,
-        AnalysisComponent<SourceFile> cmComponent) throws SetUpException;
+    protected abstract AnalysisComponent<R> callAnalysor(@NonNull TestConfiguration tConfig,
+            @NonNull AnalysisComponent<SourceFile> cmComponent) throws SetUpException;
 }

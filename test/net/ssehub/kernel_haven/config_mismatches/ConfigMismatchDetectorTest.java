@@ -23,6 +23,7 @@ import net.ssehub.kernel_haven.test_utils.TestConfiguration;
 import net.ssehub.kernel_haven.util.Logger;
 import net.ssehub.kernel_haven.util.logic.Conjunction;
 import net.ssehub.kernel_haven.util.logic.Variable;
+import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
 import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
 
@@ -31,6 +32,7 @@ import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
  * @author El-Sharkawy
  *
  */
+@SuppressWarnings("null")
 public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWithFeatureEffect> {
 
     private AnalysisComponent<VariabilityModel> vm;
@@ -124,8 +126,8 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
     }
     
     @Override
-    protected AnalysisComponent<VariableWithFeatureEffect> callAnalysor(TestConfiguration tConfig,
-        AnalysisComponent<SourceFile> cmComponent) throws SetUpException {
+    protected AnalysisComponent<VariableWithFeatureEffect> callAnalysor(@NonNull TestConfiguration tConfig,
+            @NonNull AnalysisComponent<SourceFile> cmComponent) throws SetUpException {
         
         PcFinder pcFinder = new PcFinder(tConfig, cmComponent);
         FeatureEffectFinder feFinder = new FeatureEffectFinder(tConfig, pcFinder);
