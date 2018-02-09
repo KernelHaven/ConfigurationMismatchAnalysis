@@ -39,7 +39,7 @@ public abstract class AbstractFinderTests<R> {
      */
     protected List<R> runAnalysis(CodeElement element, SimplificationType simplification) {
         // Generate configuration
-        TestConfiguration tConfig = null;
+        @NonNull TestConfiguration tConfig = null;
         Properties config = new Properties();
         if (null != simplification) {
             config.setProperty(Settings.SIMPLIFIY.getKey(), simplification.name());
