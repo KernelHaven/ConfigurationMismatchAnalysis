@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import net.ssehub.kernel_haven.SetUpException;
@@ -20,13 +19,12 @@ import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder.VariableWithF
 import net.ssehub.kernel_haven.fe_analysis.pcs.PcFinder;
 import net.ssehub.kernel_haven.test_utils.TestAnalysisComponentProvider;
 import net.ssehub.kernel_haven.test_utils.TestConfiguration;
-import net.ssehub.kernel_haven.util.Logger;
 import net.ssehub.kernel_haven.util.logic.Conjunction;
 import net.ssehub.kernel_haven.util.logic.Variable;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
-import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
 import net.ssehub.kernel_haven.variability_model.VariabilityModelDescriptor.ConstraintFileType;
+import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
 
 /**
  * Tests the {@link ConfigMismatchDetector}.
@@ -37,14 +35,6 @@ import net.ssehub.kernel_haven.variability_model.VariabilityModelDescriptor.Cons
 public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWithFeatureEffect> {
 
     private AnalysisComponent<VariabilityModel> vm;
-    
-    /**
-     * Initializes the logger.
-     */
-    @BeforeClass
-    public static void setUpBeforeClass() {
-        Logger.init();
-    }
     
     /**
      * Tests if a code nesting, contrary to the nesting in the variability model can be identified as configuration
