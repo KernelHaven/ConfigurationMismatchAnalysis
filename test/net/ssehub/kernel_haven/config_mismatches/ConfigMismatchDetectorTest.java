@@ -26,6 +26,7 @@ import net.ssehub.kernel_haven.util.logic.Variable;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
 import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
+import net.ssehub.kernel_haven.variability_model.VariabilityModelDescriptor.ConstraintFileType;
 
 /**
  * Tests the {@link ConfigMismatchDetector}.
@@ -106,6 +107,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
         variables.add(new VariabilityVariable("BETA", "bool", 2));
         variables.add(new VariabilityVariable("GAMMA", "bool", 3));
         VariabilityModel varModel = new VariabilityModel(cnfFile, variables);
+        varModel.getDescriptor().setConstraintFileType(ConstraintFileType.DIMACS);
         
         Assert.assertNotNull("Error: VariabilityModel not initialized.", varModel);
         try {
