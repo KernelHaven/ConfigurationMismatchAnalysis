@@ -2,7 +2,7 @@
 
 <!-- Author: Sascha El-Sharkawy -->
 <project name="ConfigurationMismatchAnalysis" default="jenkins" basedir=".">
-	<description>Detects presence condtions and feature effects.</description>
+	<description>Analysis components for detecting configuration mismatches</description>
 
 	<!-- Load Marcros on Jenkins -->
 	<include file="../../KernelHaven_Infrastructure/workspace/KernelHavenMacros.xml" as="KH_Common" optional="true" />
