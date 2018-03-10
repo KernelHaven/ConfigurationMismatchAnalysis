@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!-- Author: Sascha El-Sharkawy -->
-<project name="ConfigurationMismatchAnalysis" default="jenkins" basedir="." xmlns:jacoco="antlib:org.jacoco.ant" xmlns:cs="antlib:com.puppycrawl.tools.checkstyle.ant">
+<project name="ConfigurationMismatchAnalysis" default="jenkins" basedir=".">
 	<description>Detects presence condtions and feature effects.</description>
 
 	<!-- Load Marcros on Jenkins -->
-  <include file="../../KernelHaven_Infrastructure/workspace/KernelHavenMacros.xml" as="KH_Common" optional="true"/>
-  <!-- Load Marcros in Eclipse -->
-  <include file="../KernelHaven/KernelHavenMacros.xml" as="KH_Common" optional="true"/>
+	<include file="../../KernelHaven_Infrastructure/workspace/KernelHavenMacros.xml" as="KH_Common" optional="true" />
+	<!-- Load Marcros in Eclipse -->
+	<include file="../KernelHaven/KernelHavenMacros.xml" as="KH_Common" optional="true" />
 
-  <target name="jenkins">
-    <antcall target="init" />
-    <antcall target="KH_Common.compile" />
-  	<antcall target="KH_Common.test" />
-    <antcall target="KH_Common.jar" />
-    <antcall target="KH_Common.jarwithsources" />
-    <antcall target="KH_Common.check" />
-    <antcall target="KH_Common.jacoco_report" />
-  </target>
+	<target name="jenkins">
+		<antcall target="init" />
+		<antcall target="KH_Common.compile" />
+		<antcall target="KH_Common.test" />
+		<antcall target="KH_Common.jar" />
+		<antcall target="KH_Common.jarwithsources" />
+		<antcall target="KH_Common.check" />
+		<antcall target="KH_Common.jacoco_report" />
+	</target>
 
-  <target name="init">
-    <antcall target="KH_Common.prepare.folders" />
-  	<get src="${CnfUtils.location}" dest="${dependencies.dir}/" />
-    <get src="${infrastructure.location}" dest="${dependencies.dir}/" />
-  	<get src="${FeatureEffectAnalysis.location_src}" dest="${dependencies.dir}/" />
-  </target>
+	<target name="init">
+		<antcall target="KH_Common.prepare.folders" />
+		<get src="${CnfUtils.location}" dest="${dependencies.dir}/" />
+		<get src="${infrastructure.location}" dest="${dependencies.dir}/" />
+		<get src="${FeatureEffectAnalysis.location_src}" dest="${dependencies.dir}/" />
+	</target>
+	
 </project>
