@@ -1,6 +1,6 @@
 # ConfigurationMismatchAnalysis
 
-![Build Status](http://jenkins.sse.uni-hildesheim.de/buildStatus/icon?job=KernelHaven_Configuration_Mismatches)
+![Build Status](https://jenkins.sse.uni-hildesheim.de/buildStatus/icon?job=KernelHaven_Configuration_Mismatches)
 
 An analysis plugin for [KernelHaven](https://github.com/KernelHaven/KernelHaven).
 
