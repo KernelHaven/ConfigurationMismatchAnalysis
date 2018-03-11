@@ -18,3 +18,7 @@ The following analysis components can be used as part of a `ConfiguredPipelineAn
 In addition to KernelHaven, this plugin has the following dependencies:
 * [FeatureEffectAnalyzer](https://github.com/KernelHaven/FeatureEffectAnalysis)
 * [CnfUtils](https://github.com/KernelHaven/CnfUtils)
+
+## License
+
+This plugin is licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0.html).
