@@ -67,7 +67,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             LOGGER.logException("Can't convert variability model to CNF", e);
         }
         
-        if (varModel == null) {
+        if (varModel == null || variables == null) {
             LOGGER.logError("Couldn't get variability model.");
             return;
         }
