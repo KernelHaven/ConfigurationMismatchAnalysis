@@ -1,5 +1,8 @@
 package net.ssehub.kernel_haven.config_mismatches;
 
+import java.util.Collections;
+import java.util.Set;
+
 import net.ssehub.kernel_haven.SetUpException;
 import net.ssehub.kernel_haven.analysis.AnalysisComponent;
 import net.ssehub.kernel_haven.cnf.Cnf;
@@ -17,6 +20,7 @@ import net.ssehub.kernel_haven.util.logic.Conjunction;
 import net.ssehub.kernel_haven.util.logic.Formula;
 import net.ssehub.kernel_haven.util.logic.Negation;
 import net.ssehub.kernel_haven.util.logic.Variable;
+import net.ssehub.kernel_haven.util.logic.VariableFinder;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
 
@@ -52,9 +56,11 @@ public class ConfigMismatchDetector extends AnalysisComponent<VariableWithFeatur
     @Override
     protected void execute() {
         Cnf varModel = null;
+        Set<String> variables = null;
         try {
             VariabilityModel vm = vmProvider.getNextResult();
             if (vm != null) {
+                variables = Collections.unmodifiableSet(vm.getVariableMap().keySet());
                 varModel = new VmToCnfConverter().convertVmToCnf(vm);
             }
         } catch (FormatException e) {
@@ -67,29 +73,55 @@ public class ConfigMismatchDetector extends AnalysisComponent<VariableWithFeatur
         }
         
         VariableWithFeatureEffect variable;
-        
-        
         while ((variable = feFinder.getNextResult()) != null) {
-            try {
-                Formula var = new Variable(variable.getVariable());
-                Formula notFeatureEffect = new Negation(variable.getFeatureEffect());
-                Formula feViolation = new Conjunction(var, notFeatureEffect);
-                Cnf feViolationAsCnf = converter.convert(feViolation);
-                
-                // check if sat(VarModel AND Variable is selected AND feature effect is violated)
-                SatSolver solver = new SatSolver(varModel);
-                boolean isMissing = solver.isSatisfiable(feViolationAsCnf);
-                
-                if (isMissing) {
-                    addResult(variable);
+            ConfigMismatchResult mismatchResult = null;
+            String varName = variable.getVariable();
+            Formula feConstraint = variable.getFeatureEffect();
+            
+            if (!variables.contains(varName)) {
+                mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                    MismatchResultType.VARIABLE_NOT_DEFINED);
+            } else {
+                VariableFinder varFinder = new VariableFinder();
+                feConstraint.accept(varFinder);
+                boolean allVarsKnown = true;
+                for (String var : varFinder.getVariableNames()) {
+                    if (!variables.contains(var)) {
+                        allVarsKnown = false;
+                        break;
+                    }
                 }
-            } catch (ConverterException e) {
-                LOGGER.logError("Could not translate feature effect constraint for variable: "
-                    + variable.getVariable() + ", reason: " + e.getMessage());
-            } catch (SolverException e) {
-                LOGGER.logError("Could not solve feature effect constraint for variable: "
-                    + variable.getVariable() + ", reason: " + e.getMessage());
+                if (!allVarsKnown) {
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                        MismatchResultType.FORMULA_NOT_SUPPORTED);
+                }
             }
+            
+            if (null == mismatchResult) {
+                Formula var = new Variable(varName);
+                Formula notFeatureEffect = new Negation(feConstraint);
+                Formula feViolation = new Conjunction(var, notFeatureEffect);
+                
+                try {
+                    Cnf feViolationAsCnf = converter.convert(feViolation);
+                    
+                    // check if sat(VarModel AND Variable is selected AND feature effect is violated)
+                    SatSolver solver = new SatSolver(varModel);
+                    boolean isMissing = solver.isSatisfiable(feViolationAsCnf);
+                    
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                        isMissing ? MismatchResultType.CONFLICT_WITH_VARMODEL : MismatchResultType.CONSISTENT);
+                } catch (ConverterException e) {
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
+                    LOGGER.logError("Could not translate feature effect constraint for variable: "
+                        + variable.getVariable() + ", reason: " + e.getMessage());
+                } catch (SolverException e) {
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
+                    LOGGER.logError("Could not solve feature effect constraint for variable: "
+                            + variable.getVariable() + ", reason: " + e.getMessage());
+                }
+            }
+            addResult(mismatchResult);
         }
     }
 
