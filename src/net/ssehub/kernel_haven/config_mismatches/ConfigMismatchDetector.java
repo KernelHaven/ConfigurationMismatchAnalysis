@@ -29,7 +29,7 @@ import net.ssehub.kernel_haven.variability_model.VariabilityModel;
  * @author El-Sharkawy
  *
  */
-public class ConfigMismatchDetector extends AnalysisComponent<VariableWithFeatureEffect> {
+public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResult> {
 
     private @NonNull AnalysisComponent<VariableWithFeatureEffect> feFinder;
     private @NonNull AnalysisComponent<VariabilityModel> vmProvider;

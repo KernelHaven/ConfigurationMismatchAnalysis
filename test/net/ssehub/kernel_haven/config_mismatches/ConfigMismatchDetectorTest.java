@@ -15,7 +15,6 @@ import net.ssehub.kernel_haven.code_model.CodeElement;
 import net.ssehub.kernel_haven.code_model.SourceFile;
 import net.ssehub.kernel_haven.fe_analysis.Settings.SimplificationType;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder;
-import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder.VariableWithFeatureEffect;
 import net.ssehub.kernel_haven.fe_analysis.pcs.PcFinder;
 import net.ssehub.kernel_haven.test_utils.TestAnalysisComponentProvider;
 import net.ssehub.kernel_haven.test_utils.TestConfiguration;
@@ -32,7 +31,7 @@ import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
  *
  */
 @SuppressWarnings("null")
-public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWithFeatureEffect> {
+public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismatchResult> {
 
     private AnalysisComponent<VariabilityModel> vm;
     
@@ -51,17 +50,23 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
         CodeElement element = new CodeBlock(varA);
         CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
         element.addNestedElement(nestedElement);
-        List<VariableWithFeatureEffect> results = detectConfigMismatches(element);
+        List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
         // One mismatch detected
-        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(2, results.size());
+        
+        // Variable A is not problematic
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varA.getName(), var.getVariable());
+        Assert.assertEquals("1", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), var.getResult());
         
         // Problematic variable is B, which is always nested below A, which is not covered by the variability model
-        VariableWithFeatureEffect var = results.get(0);
-        Assert.assertEquals("BETA", var.getVariable());
-        
+        var = results.get(1);
+        Assert.assertEquals(varB.getName(), var.getVariable());
         // Not covered (precondition) constraint for B is: A
         Assert.assertEquals("ALPHA", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.CONFLICT_WITH_VARMODEL.getDescription(), var.getResult());        
     }
     
     /**
@@ -78,10 +83,13 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
         CodeElement element = new CodeBlock(varB);
         CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
         element.addNestedElement(nestedElement);
-        List<VariableWithFeatureEffect> results = detectConfigMismatches(element);
+        List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
         // One mismatch detected
-        Assert.assertEquals(0, results.size());
+        Assert.assertEquals(2, results.size());
+        for (ConfigMismatchResult configMismatchResult : results) {
+            Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), configMismatchResult.getResult());
+        }
     }
 
     /**
@@ -113,12 +121,12 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<VariableWith
      * @param element A mocked element, which should be analyzed by the {@link ConfigMismatchDetector}. 
      * @return The detected configuration mismatches.
      */
-    private List<VariableWithFeatureEffect> detectConfigMismatches(CodeElement element) {
+    private List<ConfigMismatchResult> detectConfigMismatches(CodeElement element) {
         return super.runAnalysis(element, SimplificationType.NO_SIMPLIFICATION);
     }
     
     @Override
-    protected AnalysisComponent<VariableWithFeatureEffect> callAnalysor(@NonNull TestConfiguration tConfig,
+    protected AnalysisComponent<ConfigMismatchResult> callAnalysor(@NonNull TestConfiguration tConfig,
             @NonNull AnalysisComponent<SourceFile> cmComponent) throws SetUpException {
         
         PcFinder pcFinder = new PcFinder(tConfig, cmComponent);
