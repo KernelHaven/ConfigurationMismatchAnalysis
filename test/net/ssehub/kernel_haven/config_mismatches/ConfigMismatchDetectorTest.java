@@ -91,6 +91,26 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
             Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), configMismatchResult.getResult());
         }
     }
+    
+    /**
+     * Tests if free variable in model, which can be used in all situations in code is consistent.
+     */
+    @Test
+    public void testUnConstrainedVariableIsConsistent() {
+        // Load Variability Model: A is nested in B
+        setVarModel(new File("testdata/ANestedInB.cnf"));
+        
+        // Mock code file: only GAMMA in one block
+        Variable varG = new Variable("GAMMA");
+        CodeElement element = new CodeBlock(varG);
+        List<ConfigMismatchResult> results = detectConfigMismatches(element);
+        
+        // One mismatch detected
+        Assert.assertEquals(1, results.size());
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varG.getName(), var.getVariable());
+        Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), var.getResult());
+    }
 
     /**
      * Loads and sets the variability model based on the given CNF file.
