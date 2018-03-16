@@ -111,6 +111,59 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         Assert.assertEquals(varG.getName(), var.getVariable());
         Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), var.getResult());
     }
+    
+    /**
+     * Tests unspecified variable found.
+     */
+    @Test
+    public void testUnDefinedVariable() {
+        // Load Variability Model: A is nested in B
+        setVarModel(new File("testdata/ANestedInB.cnf"));
+        
+        // Mock code file: only A_UNDEFINED_VAR in one block
+        Variable varU = new Variable("A_UNDEFINED_VAR");
+        CodeElement element = new CodeBlock(varU);
+        List<ConfigMismatchResult> results = detectConfigMismatches(element);
+        
+        // One mismatch detected
+        Assert.assertEquals(1, results.size());
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varU.getName(), var.getVariable());
+        Assert.assertEquals(MismatchResultType.VARIABLE_NOT_DEFINED.getDescription(), var.getResult());
+    }
+    
+    /**
+     * Tests unspecified variable in constraint found.
+     */
+    @Test
+    public void testUnDefinedConstraints() {
+        // Load Variability Model: A is nested in B
+        setVarModel(new File("testdata/ANestedInB.cnf"));
+        
+        // Mock code file: B is nested in A_UNDEFINED_VAR
+        Variable varA = new Variable("A_UNDEFINED_VAR");
+        Variable varB = new Variable("BETA");
+        CodeElement element = new CodeBlock(varA);
+        CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
+        element.addNestedElement(nestedElement);
+        List<ConfigMismatchResult> results = detectConfigMismatches(element);
+        
+        // One mismatch detected
+        Assert.assertEquals(2, results.size());
+        
+        // Variable A_UNDEFINED_VAR is not defined
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varA.getName(), var.getVariable());
+        Assert.assertEquals("1", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.VARIABLE_NOT_DEFINED.getDescription(), var.getResult());
+        
+        // Problematic variable is B, which is always nested below A, which is not covered by the variability model
+        var = results.get(1);
+        Assert.assertEquals(varB.getName(), var.getVariable());
+        // Not checkable (precondition) constraint for B is: A_UNDEFINED_VAR
+        Assert.assertEquals("A_UNDEFINED_VAR", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.FORMULA_NOT_SUPPORTED.getDescription(), var.getResult());        
+    }
 
     /**
      * Loads and sets the variability model based on the given CNF file.
