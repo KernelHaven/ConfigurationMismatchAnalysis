@@ -1,5 +1,7 @@
 package net.ssehub.kernel_haven.config_mismatches;
 
+import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.and;
+
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +20,6 @@ import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder;
 import net.ssehub.kernel_haven.fe_analysis.pcs.PcFinder;
 import net.ssehub.kernel_haven.test_utils.TestAnalysisComponentProvider;
 import net.ssehub.kernel_haven.test_utils.TestConfiguration;
-import net.ssehub.kernel_haven.util.logic.Conjunction;
 import net.ssehub.kernel_haven.util.logic.Variable;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
@@ -48,7 +49,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         Variable varA = new Variable("ALPHA");
         Variable varB = new Variable("BETA");
         CodeElement element = new CodeBlock(varA);
-        CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
+        CodeElement nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
@@ -81,7 +82,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         Variable varA = new Variable("ALPHA");
         Variable varB = new Variable("BETA");
         CodeElement element = new CodeBlock(varB);
-        CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
+        CodeElement nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
@@ -144,7 +145,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         Variable varA = new Variable("A_UNDEFINED_VAR");
         Variable varB = new Variable("BETA");
         CodeElement element = new CodeBlock(varA);
-        CodeElement nestedElement = new CodeBlock(new Conjunction(varB, varA));
+        CodeElement nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         

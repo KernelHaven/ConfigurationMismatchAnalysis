@@ -1,5 +1,8 @@
 package net.ssehub.kernel_haven.config_mismatches;
 
+import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.and;
+import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.not;
+
 import java.util.Collections;
 import java.util.Set;
 
@@ -16,10 +19,7 @@ import net.ssehub.kernel_haven.cnf.VmToCnfConverter;
 import net.ssehub.kernel_haven.config.Configuration;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder.VariableWithFeatureEffect;
 import net.ssehub.kernel_haven.util.FormatException;
-import net.ssehub.kernel_haven.util.logic.Conjunction;
 import net.ssehub.kernel_haven.util.logic.Formula;
-import net.ssehub.kernel_haven.util.logic.Negation;
-import net.ssehub.kernel_haven.util.logic.Variable;
 import net.ssehub.kernel_haven.util.logic.VariableFinder;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
 import net.ssehub.kernel_haven.variability_model.VariabilityModel;
@@ -98,12 +98,8 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             }
             
             if (null == mismatchResult) {
-                Formula var = new Variable(varName);
-                Formula notFeatureEffect = new Negation(feConstraint);
-                Formula feViolation = new Conjunction(var, notFeatureEffect);
-                
                 try {
-                    Cnf feViolationAsCnf = converter.convert(feViolation);
+                    Cnf feViolationAsCnf = converter.convert(and(varName, not(feConstraint)));
                     
                     // check if sat(VarModel AND Variable is selected AND feature effect is violated)
                     SatSolver solver = new SatSolver(varModel);
