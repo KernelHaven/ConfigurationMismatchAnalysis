@@ -13,7 +13,8 @@ import net.ssehub.kernel_haven.cnf.ConverterException;
 import net.ssehub.kernel_haven.cnf.FormulaToCnfConverterFactory;
 import net.ssehub.kernel_haven.cnf.FormulaToCnfConverterFactory.Strategy;
 import net.ssehub.kernel_haven.cnf.IFormulaToCnfConverter;
-import net.ssehub.kernel_haven.cnf.SatSolver;
+import net.ssehub.kernel_haven.cnf.ISatSolver;
+import net.ssehub.kernel_haven.cnf.SatSolverFactory;
 import net.ssehub.kernel_haven.cnf.SolverException;
 import net.ssehub.kernel_haven.cnf.VmToCnfConverter;
 import net.ssehub.kernel_haven.config.Configuration;
@@ -34,6 +35,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
     private @NonNull AnalysisComponent<VariableWithFeatureEffect> feFinder;
     private @NonNull AnalysisComponent<VariabilityModel> vmProvider;
     private @NonNull IFormulaToCnfConverter converter;
+    private @NonNull Configuration config;
 
     /**
      * Creates a new {@link ConfigMismatchDetector} for the given feature effect finder.
@@ -48,6 +50,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             @NonNull AnalysisComponent<VariableWithFeatureEffect> feFinder) throws SetUpException {
         
         super(config);
+        this.config = config;
         this.feFinder = feFinder;
         this.vmProvider = vmProvider;
         converter = FormulaToCnfConverterFactory.create(Strategy.RECURISVE_REPLACING);
@@ -102,7 +105,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                     Cnf feViolationAsCnf = converter.convert(and(varName, not(feConstraint)));
                     
                     // check if sat(VarModel AND Variable is selected AND feature effect is violated)
-                    SatSolver solver = new SatSolver(varModel);
+                    ISatSolver solver = SatSolverFactory.createSolver(config, null, varModel, false);
                     boolean isMissing = solver.isSatisfiable(feViolationAsCnf);
                     
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint,
@@ -111,7 +114,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
                     LOGGER.logError("Could not translate feature effect constraint for variable: "
                         + variable.getVariable() + ", reason: " + e.getMessage());
-                } catch (SolverException e) {
+                } catch (SolverException | SetUpException e) {
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
                     LOGGER.logError("Could not solve feature effect constraint for variable: "
                             + variable.getVariable() + ", reason: " + e.getMessage());
