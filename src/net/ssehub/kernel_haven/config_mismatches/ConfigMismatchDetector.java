@@ -35,7 +35,6 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
     private @NonNull AnalysisComponent<VariableWithFeatureEffect> feFinder;
     private @NonNull AnalysisComponent<VariabilityModel> vmProvider;
     private @NonNull IFormulaToCnfConverter converter;
-    private @NonNull Configuration config;
 
     /**
      * Creates a new {@link ConfigMismatchDetector} for the given feature effect finder.
@@ -50,7 +49,6 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             @NonNull AnalysisComponent<VariableWithFeatureEffect> feFinder) throws SetUpException {
         
         super(config);
-        this.config = config;
         this.feFinder = feFinder;
         this.vmProvider = vmProvider;
         converter = FormulaToCnfConverterFactory.create(Strategy.RECURISVE_REPLACING);
@@ -105,7 +103,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                     Cnf feViolationAsCnf = converter.convert(and(varName, not(feConstraint)));
                     
                     // check if sat(VarModel AND Variable is selected AND feature effect is violated)
-                    ISatSolver solver = SatSolverFactory.createSolver(config, null, varModel, false);
+                    ISatSolver solver = SatSolverFactory.createSolver(varModel, false);
                     boolean isMissing = solver.isSatisfiable(feViolationAsCnf);
                     
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint,
@@ -114,7 +112,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
                     LOGGER.logError("Could not translate feature effect constraint for variable: "
                         + variable.getVariable() + ", reason: " + e.getMessage());
-                } catch (SolverException | SetUpException e) {
+                } catch (SolverException e) {
                     mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
                     LOGGER.logError("Could not solve feature effect constraint for variable: "
                             + variable.getVariable() + ", reason: " + e.getMessage());
