@@ -2,6 +2,7 @@ package net.ssehub.kernel_haven.config_mismatches;
 
 import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.and;
 import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.not;
+import static net.ssehub.kernel_haven.util.null_checks.NullHelpers.notNull;
 
 import java.util.Collections;
 import java.util.Set;
@@ -20,6 +21,7 @@ import net.ssehub.kernel_haven.cnf.VmToCnfConverter;
 import net.ssehub.kernel_haven.config.Configuration;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder.VariableWithFeatureEffect;
 import net.ssehub.kernel_haven.util.FormatException;
+import net.ssehub.kernel_haven.util.ProgressLogger;
 import net.ssehub.kernel_haven.util.logic.Formula;
 import net.ssehub.kernel_haven.util.logic.VariableFinder;
 import net.ssehub.kernel_haven.util.null_checks.NonNull;
@@ -73,6 +75,8 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             return;
         }
         
+        ProgressLogger progress = new ProgressLogger(notNull(getClass().getSimpleName()));
+        
         VariableWithFeatureEffect variable;
         while ((variable = feFinder.getNextResult()) != null) {
             ConfigMismatchResult mismatchResult = null;
@@ -119,7 +123,9 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                 }
             }
             addResult(mismatchResult);
+            progress.oneDone();
         }
+        progress.close();
     }
 
     @Override
