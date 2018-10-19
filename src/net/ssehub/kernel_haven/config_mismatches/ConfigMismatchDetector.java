@@ -123,7 +123,7 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
                 }
             }
             addResult(mismatchResult);
-            progress.oneDone();
+            progress.processedOne();
         }
         progress.close();
     }
