@@ -48,8 +48,8 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         // Mock code file: B is nested in A
         Variable varA = new Variable("ALPHA");
         Variable varB = new Variable("BETA");
-        CodeElement element = new CodeBlock(varA);
-        CodeElement nestedElement = new CodeBlock(and(varB, varA));
+        CodeBlock element = new CodeBlock(varA);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
@@ -81,8 +81,8 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         // Mock code file: A is nested in B
         Variable varA = new Variable("ALPHA");
         Variable varB = new Variable("BETA");
-        CodeElement element = new CodeBlock(varB);
-        CodeElement nestedElement = new CodeBlock(and(varB, varA));
+        CodeBlock element = new CodeBlock(varB);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
@@ -144,8 +144,8 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         // Mock code file: B is nested in A_UNDEFINED_VAR
         Variable varA = new Variable("A_UNDEFINED_VAR");
         Variable varB = new Variable("BETA");
-        CodeElement element = new CodeBlock(varA);
-        CodeElement nestedElement = new CodeBlock(and(varB, varA));
+        CodeBlock element = new CodeBlock(varA);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
         element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
