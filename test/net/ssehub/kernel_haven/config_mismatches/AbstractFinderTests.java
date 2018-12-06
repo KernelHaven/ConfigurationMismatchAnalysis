@@ -59,7 +59,8 @@ public abstract class AbstractFinderTests<R> {
         
         List<R> results = new ArrayList<>();
         try {
-            AnalysisComponent<SourceFile<?>> cmComponent = new TestAnalysisComponentProvider<>(sourceFile1);
+            AnalysisComponent<SourceFile<?>> cmComponent
+                    = new TestAnalysisComponentProvider<SourceFile<?>>(sourceFile1);
             AnalysisComponent<R> finder = callAnalysor(tConfig, cmComponent);
             R result;
             do {
