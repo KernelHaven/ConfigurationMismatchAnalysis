@@ -103,7 +103,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         
         // Mock code file: only GAMMA in one block
         Variable varG = new Variable("GAMMA");
-        CodeElement element = new CodeBlock(varG);
+        CodeBlock element = new CodeBlock(varG);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
         // One mismatch detected
@@ -123,7 +123,7 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         
         // Mock code file: only A_UNDEFINED_VAR in one block
         Variable varU = new Variable("A_UNDEFINED_VAR");
-        CodeElement element = new CodeBlock(varU);
+        CodeBlock element = new CodeBlock(varU);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
         // One mismatch detected
@@ -195,13 +195,13 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
      * @param element A mocked element, which should be analyzed by the {@link ConfigMismatchDetector}. 
      * @return The detected configuration mismatches.
      */
-    private List<ConfigMismatchResult> detectConfigMismatches(CodeElement element) {
+    private List<ConfigMismatchResult> detectConfigMismatches(CodeElement<?> element) {
         return super.runAnalysis(element, SimplificationType.NO_SIMPLIFICATION);
     }
     
     @Override
     protected AnalysisComponent<ConfigMismatchResult> callAnalysor(@NonNull TestConfiguration tConfig,
-            @NonNull AnalysisComponent<SourceFile> cmComponent) throws SetUpException {
+            @NonNull AnalysisComponent<SourceFile<?>> cmComponent) throws SetUpException {
         
         PcFinder pcFinder = new PcFinder(tConfig, cmComponent);
         FeatureEffectFinder feFinder = new FeatureEffectFinder(tConfig, pcFinder);
