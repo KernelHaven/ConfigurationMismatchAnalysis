@@ -1,6 +1,6 @@
 # ConfigurationMismatchAnalysis
 
-![Build Status](https://jenkins.sse.uni-hildesheim.de/buildStatus/icon?job=KernelHaven_Configuration_Mismatches)
+![Build Status](https://jenkins-2.sse.uni-hildesheim.de/buildStatus/icon?job=KH_Configuration_Mismatches)
 
 An analysis plugin for [KernelHaven](https://github.com/KernelHaven/KernelHaven).
 
@@ -8,7 +8,7 @@ Analysis components for detection of Configuration Mismatches as published by [E
 
 ## Usage
 
-Place [`ConfigurationMismatchAnalysis.jar`](https://jenkins.sse.uni-hildesheim.de/view/KernelHaven/job/KernelHaven_Configuration_Mismatches/lastSuccessfulBuild/artifact/build/jar/ConfigurationMismatchAnalysis.jar) in the plugins folder of KernelHaven.
+Place [`ConfigurationMismatchAnalysis.jar`](https://jenkins-2.sse.uni-hildesheim.de/view/KernelHaven/job/KH_Configuration_Mismatches/lastSuccessfulBuild/artifact/build/jar/ConfigurationMismatchAnalysis.jar) in the plugins folder of KernelHaven.
 
 The following analysis components can be used as part of a `ConfiguredPipelineAnalysis`:
 * `net.ssehub.kernel_haven.config_mismatches.ConfigMismatchDetector`
