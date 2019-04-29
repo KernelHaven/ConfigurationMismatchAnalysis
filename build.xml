@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Author: Sascha El-Sharkawy -->
+<!-- Author: Adam, Sascha El-Sharkawy -->
 <project name="ConfigurationMismatchAnalysis" default="jenkins" basedir=".">
 	<description>Analysis components for detecting configuration mismatches</description>
 
@@ -21,8 +21,8 @@
 
 	<target name="dependencies.download">
 		<get src="${infrastructure.fortesting.url}" dest="${dependencies.dir}" />
-		<get src="${plugins.CnfUtils.url}" dest="${dependencies.dir}/" />
-		<get src="${plugins.FeatureEffectAnalysis.url}" dest="${dependencies.dir}/" />
+		<get src="${plugins.CnfUtils.url}" dest="${dependencies.dir}" />
+		<get src="${plugins.FeatureEffectAnalysis.url}" dest="${dependencies.dir}" />
 	</target>
 
 </project>
