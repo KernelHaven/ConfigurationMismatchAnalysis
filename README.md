@@ -8,7 +8,7 @@ Analysis components for detection of Configuration Mismatches as published by [E
 
 ## Usage
 
-Place [`ConfigurationMismatchAnalysis.jar`](https://jenkins-2.sse.uni-hildesheim.de/view/KernelHaven/job/KH_ConfigurationMismatchAnalysis/lastSuccessfulBuild/artifact/build/jar/ConfigurationMismatchAnalysis.jar) in the plugins folder of KernelHaven.
+Place [`ConfigurationMismatchAnalysis.jar`](https://jenkins-2.sse.uni-hildesheim.de/job/KH_ConfigurationMismatchAnalysis/lastSuccessfulBuild/artifact/build/jar/ConfigurationMismatchAnalysis.jar) in the plugins folder of KernelHaven.
 
 The following analysis components can be used as part of a `ConfiguredPipelineAnalysis`:
 * `net.ssehub.kernel_haven.config_mismatches.ConfigMismatchDetector`
