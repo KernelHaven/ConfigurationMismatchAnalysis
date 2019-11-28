@@ -12,6 +12,7 @@ Place [`ConfigurationMismatchAnalysis.jar`](https://jenkins-2.sse.uni-hildesheim
 
 The following analysis components can be used as part of a `ConfiguredPipelineAnalysis`:
 * `net.ssehub.kernel_haven.config_mismatches.ConfigMismatchDetector`
+* `net.ssehub.kernel_haven.config_mismatches.DetailedConfigMismatchDetector`
 
 ## Dependencies
 
