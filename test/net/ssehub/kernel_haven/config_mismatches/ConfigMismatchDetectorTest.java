@@ -33,7 +33,6 @@ import net.ssehub.kernel_haven.code_model.SourceFile;
 import net.ssehub.kernel_haven.fe_analysis.Settings.SimplificationType;
 import net.ssehub.kernel_haven.fe_analysis.fes.FeatureEffectFinder;
 import net.ssehub.kernel_haven.fe_analysis.pcs.PcFinder;
-import net.ssehub.kernel_haven.logic_utils.AdamsAwesomeSimplifier;
 import net.ssehub.kernel_haven.test_utils.TestAnalysisComponentProvider;
 import net.ssehub.kernel_haven.test_utils.TestConfiguration;
 import net.ssehub.kernel_haven.util.logic.Variable;
@@ -45,7 +44,6 @@ import net.ssehub.kernel_haven.variability_model.VariabilityVariable;
 /**
  * Tests the {@link ConfigMismatchDetector}.
  * @author El-Sharkawy
- * @author Slawomir Duszynski
  *
  */
 @SuppressWarnings("null")
@@ -53,134 +51,39 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
 
     private AnalysisComponent<VariabilityModel> vm;
     
-    private final Variable varA = new Variable("ALPHA");
-    private final Variable varB = new Variable("BETA");
-    private final Variable varG = new Variable("GAMMA");
-    
     /**
-     * Tests if a contradiction is detected.
+     * Tests if a code nesting, contrary to the nesting in the variability model can be identified as configuration
+     * mismatch.
      */
     @Test
-    public void testDetectionOfContradiction() {
-        // Load Variability Model: not A, B
-        setVarModel(new File("testdata/NotAAndB.cnf"));
-        
-        // Mock code file: B is nested in A
-        CodeBlock element = prepareNesting(varB, varA);
-        List<ConfigMismatchResult> results = detectConfigMismatches(element);
-        
-        Assert.assertEquals(2, results.size());
-        // Variable A is not problematic
-        assertFacts(results.get(0), varA.getName(), "1", MismatchResultType.FORMULA_MORE_GENERAL);
-        // Problematic variable is B: its effect contradicts the variability model
-        assertFacts(results.get(1), varB.getName(), "ALPHA", MismatchResultType.CONTRADICTION);
-    }
- 
-    /**
-     * Tests if a dead feature in the overlap is detected.
-     */
-    @Test
-    public void testDetectionOfDeadOverlap() {
-        // Load Variability Model: A conflicts B
-        setVarModel(new File("testdata/AConflictsB.cnf"));
-        
-        // Mock code file: B is nested in A; B => A
-        CodeBlock element = prepareNesting(varB, varA);
-        List<ConfigMismatchResult> results = detectConfigMismatches(element);
-        
-        Assert.assertEquals(2, results.size());
-        // Variable A is not problematic
-        assertFacts(results.get(0), varA.getName(), "1", MismatchResultType.FORMULA_MORE_GENERAL);
-        // Problematic variable is B, which can only be dead
-        assertFacts(results.get(1), varB.getName(), "ALPHA", MismatchResultType.PARTIAL_OVERLAP_DEAD);
-    }    
-    
-    /**
-     * Tests if a more general feature model is detected.
-     */
-    @Test
-    public void testDetectionOfFmMoreGeneral() {
-        // Load Variability Model: A => B
-        setVarModel(new File("testdata/ANestedInB.cnf"));
-        
-        // Mock code file: A is nested in B and G
-        CodeBlock element = new CodeBlock(varG);
-        CodeBlock nestedElement = new CodeBlock(and(varB, varG));
-        CodeBlock nestedElement2 = new CodeBlock(and(and(varB, varG), varA));
-        nestedElement.addNestedElement(nestedElement2);
-        element.addNestedElement(nestedElement);
-        List<ConfigMismatchResult> results = detectConfigMismatches(element);
-        
-        Assert.assertEquals(3, results.size());
-        // Variable A
-        assertFacts(results.get(0), varA.getName(), "BETA && GAMMA", MismatchResultType.VM_MORE_GENERAL);
-        // Variable B
-        assertFacts(results.get(1), varB.getName(), "GAMMA", MismatchResultType.PARTIAL_OVERLAP);
-        // Variable G is not having any effect
-        assertFacts(results.get(2), varG.getName(), "1", MismatchResultType.CONSISTENT);
-    }
-    
-    /**
-     * Tests if a more general feature effect is detected.
-     */
-    @Test
-    public void testDetectionOfEffectMoreGeneral() {
-        // Load Variability Model: A <=> B
-        setVarModel(new File("testdata/AEqualsB.cnf"));
-        
-        // Mock code file: A is nested in B
-        CodeBlock element = prepareNesting(varA, varB);
-        List<ConfigMismatchResult> results = detectConfigMismatches(element);
-        
-        Assert.assertEquals(2, results.size());
-        // Variable A
-        assertFacts(results.get(0), varA.getName(), "BETA", MismatchResultType.FORMULA_MORE_GENERAL);
-        // Variable B
-        assertFacts(results.get(1), varB.getName(), "1", MismatchResultType.FORMULA_MORE_GENERAL);
-    }
-    
-     /**
-     * Tests if a code nesting, opposite to the nesting in the variability model can be identified as partial overlap.
-     */
-    @Test
-    public void testDetectionOfPartialOverlap1() {
+    public void testDetectionOfContraryNesting() {
         // Load Variability Model: A is nested in B
         setVarModel(new File("testdata/ANestedInB.cnf"));
         
         // Mock code file: B is nested in A
-        CodeBlock element = prepareNesting(varB, varA);
+        Variable varA = new Variable("ALPHA");
+        Variable varB = new Variable("BETA");
+        CodeBlock element = new CodeBlock(varA);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
+        element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
         // One mismatch detected
         Assert.assertEquals(2, results.size());
+        
         // Variable A is not problematic
-        assertFacts(results.get(0), varA.getName(), "1", MismatchResultType.FORMULA_MORE_GENERAL);
-        // Problematic variable is B
-        assertFacts(results.get(1), varB.getName(), "ALPHA", MismatchResultType.PARTIAL_OVERLAP);
-    }
-    
-    /**
-     * Tests if a code nesting, referring to a different variable can be identified as partial overlap.
-     */
-    @Test
-    public void testDetectionOfPartialOverlap2() {
-        // Load Variability Model: A is nested in B
-        setVarModel(new File("testdata/ANestedInB.cnf"));
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varA.getName(), var.getVariable());
+        Assert.assertEquals("1", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), var.getResult());
         
-        // Mock code file: G is nested in B; G => B
-        CodeBlock element = prepareNesting(varG, varB);
-        List<ConfigMismatchResult> results = detectConfigMismatches(element);
-        
-        Assert.assertEquals(2, results.size());
-        // Variable B
-        assertFacts(results.get(0), varB.getName(), "1", MismatchResultType.CONSISTENT);
-        // Variable G
-        assertFacts(results.get(1), varG.getName(), "BETA", MismatchResultType.PARTIAL_OVERLAP);
-        //PARTIAL_OVERLAP because: 
-        //   - A=1 B=0 G=0 allowed by f.effect, but not by the model
-        //   - A=0 B=0 G=1 allowed by the model, but not by the f.effect
+        // Problematic variable is B, which is always nested below A, which is not covered by the variability model
+        var = results.get(1);
+        Assert.assertEquals(varB.getName(), var.getVariable());
+        // Not covered (precondition) constraint for B is: A
+        Assert.assertEquals("ALPHA", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.CONFLICT_WITH_VARMODEL.getDescription(), var.getResult());        
     }
-    
     
     /**
      * Tests if a code nesting is not reported if it is used in the same way as specified by the variability model.
@@ -191,12 +94,18 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         setVarModel(new File("testdata/ANestedInB.cnf"));
         
         // Mock code file: A is nested in B
-        CodeBlock element = prepareNesting(varA, varB);
+        Variable varA = new Variable("ALPHA");
+        Variable varB = new Variable("BETA");
+        CodeBlock element = new CodeBlock(varB);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
+        element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
+        // One mismatch detected
         Assert.assertEquals(2, results.size());
-        assertFacts(results.get(0), varA.getName(), "BETA", MismatchResultType.CONSISTENT);
-        assertFacts(results.get(1), varB.getName(), "1", MismatchResultType.CONSISTENT);
+        for (ConfigMismatchResult configMismatchResult : results) {
+            Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), configMismatchResult.getResult());
+        }
     }
     
     /**
@@ -208,11 +117,15 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         setVarModel(new File("testdata/ANestedInB.cnf"));
         
         // Mock code file: only GAMMA in one block
+        Variable varG = new Variable("GAMMA");
         CodeBlock element = new CodeBlock(varG);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
+        // One mismatch detected
         Assert.assertEquals(1, results.size());
-        assertFacts(results.get(0), varG.getName(), "1", MismatchResultType.CONSISTENT);
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varG.getName(), var.getVariable());
+        Assert.assertEquals(MismatchResultType.CONSISTENT.getDescription(), var.getResult());
     }
     
     /**
@@ -230,7 +143,9 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         
         // One mismatch detected
         Assert.assertEquals(1, results.size());
-        assertFacts(results.get(0), varU.getName(), "1", MismatchResultType.VARIABLE_NOT_DEFINED);
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varU.getName(), var.getVariable());
+        Assert.assertEquals(MismatchResultType.VARIABLE_NOT_DEFINED.getDescription(), var.getResult());
     }
     
     /**
@@ -242,14 +157,28 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         setVarModel(new File("testdata/ANestedInB.cnf"));
         
         // Mock code file: B is nested in A_UNDEFINED_VAR
-        Variable varAUndef = new Variable("A_UNDEFINED_VAR");
-        CodeBlock element = prepareNesting(varB, varAUndef);
+        Variable varA = new Variable("A_UNDEFINED_VAR");
+        Variable varB = new Variable("BETA");
+        CodeBlock element = new CodeBlock(varA);
+        CodeBlock nestedElement = new CodeBlock(and(varB, varA));
+        element.addNestedElement(nestedElement);
         List<ConfigMismatchResult> results = detectConfigMismatches(element);
         
+        // One mismatch detected
         Assert.assertEquals(2, results.size());
+        
         // Variable A_UNDEFINED_VAR is not defined
-        assertFacts(results.get(0), varAUndef.getName(), "1", MismatchResultType.VARIABLE_NOT_DEFINED);
-        assertFacts(results.get(1), varB.getName(), "A_UNDEFINED_VAR", MismatchResultType.FORMULA_NOT_SUPPORTED);
+        ConfigMismatchResult var = results.get(0);
+        Assert.assertEquals(varA.getName(), var.getVariable());
+        Assert.assertEquals("1", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.VARIABLE_NOT_DEFINED.getDescription(), var.getResult());
+        
+        // Problematic variable is B, which is always nested below A, which is not covered by the variability model
+        var = results.get(1);
+        Assert.assertEquals(varB.getName(), var.getVariable());
+        // Not checkable (precondition) constraint for B is: A_UNDEFINED_VAR
+        Assert.assertEquals("A_UNDEFINED_VAR", var.getFeatureEffect().toString());
+        Assert.assertEquals(MismatchResultType.FORMULA_NOT_SUPPORTED.getDescription(), var.getResult());        
     }
 
     /**
@@ -274,35 +203,6 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
-    }
-
-    /**
-     * Creates a {@link CodeBlock} structure where one variable is nested insside another.
-     * 
-     * @param varBefore The inner, nested variable.
-     * @param varAfter The outer, parent variable.
-     * 
-     * @return A {@link CodeBlock} structure that has the FE: varBefore implies varAfter. 
-     */
-    private CodeBlock prepareNesting(Variable varBefore, Variable varAfter) { //variable => effectVariable
-        CodeBlock element = new CodeBlock(varAfter);
-        CodeBlock nestedElement = new CodeBlock(and(varAfter, varBefore));
-        element.addNestedElement(nestedElement);
-        return element;
-    }
-    
-    /**
-     * Checks that the result matches the expected outcome.
-     * 
-     * @param var The result to check.
-     * @param name The expected variable name.
-     * @param effect The expected feature effect formula.
-     * @param mismatch The expected mismatch type.
-     */
-    private void assertFacts(ConfigMismatchResult var, String name, String effect, MismatchResultType mismatch) {
-        Assert.assertEquals(name, var.getVariable());
-        Assert.assertEquals(effect, AdamsAwesomeSimplifier.simplify(var.getFeatureEffect()).toString());
-        Assert.assertEquals(mismatch.getDescription(), var.getResult());
     }
     
     /**
