@@ -276,6 +276,14 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         }
     }
 
+    /**
+     * Creates a {@link CodeBlock} structure where one variable is nested insside another.
+     * 
+     * @param varBefore The inner, nested variable.
+     * @param varAfter The outer, parent variable.
+     * 
+     * @return A {@link CodeBlock} structure that has the FE: varBefore implies varAfter. 
+     */
     private CodeBlock prepareNesting(Variable varBefore, Variable varAfter) { //variable => effectVariable
         CodeBlock element = new CodeBlock(varAfter);
         CodeBlock nestedElement = new CodeBlock(and(varAfter, varBefore));
@@ -283,9 +291,17 @@ public class ConfigMismatchDetectorTest extends AbstractFinderTests<ConfigMismat
         return element;
     }
     
+    /**
+     * Checks that the result matches the expected outcome.
+     * 
+     * @param var The result to check.
+     * @param name The expected variable name.
+     * @param effect The expected feature effect formula.
+     * @param mismatch The expected mismatch type.
+     */
     private void assertFacts(ConfigMismatchResult var, String name, String effect, MismatchResultType mismatch) {
         Assert.assertEquals(name, var.getVariable());
-       	Assert.assertEquals(effect, AdamsAwesomeSimplifier.simplify(var.getFeatureEffect()).toString());
+        Assert.assertEquals(effect, AdamsAwesomeSimplifier.simplify(var.getFeatureEffect()).toString());
         Assert.assertEquals(mismatch.getDescription(), var.getResult());
     }
     

@@ -16,8 +16,8 @@
 package net.ssehub.kernel_haven.config_mismatches;
 
 import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.and;
-import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.or;
 import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.not;
+import static net.ssehub.kernel_haven.util.logic.FormulaBuilder.or;
 import static net.ssehub.kernel_haven.util.null_checks.NullHelpers.notNull;
 
 import java.util.Collections;
@@ -90,16 +90,17 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             LOGGER.logException("Can't convert variability model to CNF", e);
         }
         
-        if (varModel == null || variables == null) {
-            LOGGER.logError("Couldn't get variability model.");
-            return;
+        //compute the negated feature model as Cnf
+        if (varModel != null) {
+            try {
+                varModelNegated = converter.convert(not(varModel.asFormula()));
+            } catch (ConverterException e1) {
+                LOGGER.logException("Could not convert negated variability model to CNF", e1);
+            }
         }
         
-        //compute the negated feature model as Cnf
-        try {
-			varModelNegated = converter.convert(not(varModel.asFormula()));
-		} catch (ConverterException e1) {
-            LOGGER.logException("Could not convert negated variability model to CNF", e1);
+        if (varModel == null || variables == null || varModelNegated == null) {
+            LOGGER.logError("Couldn't get or convert variability model.");
             return;
         }
         
@@ -131,92 +132,125 @@ public class ConfigMismatchDetector extends AnalysisComponent<ConfigMismatchResu
             }
             
             if (null == mismatchResult) {
-                try {
-                	Formula featureEffect = or(not(new Variable(varName)), feConstraint); // Variable => feConstraint
-                	Cnf featureEffectAsCnf = converter.convert(featureEffect); 
-                    Cnf feViolationAsCnf = converter.convert(and(varName, not(feConstraint)));// NOT (Variable => feConstraint)
-                                        
-                    ISatSolver solver = SatSolverFactory.createSolver(varModel, false);
-                    
-                    boolean isCommonPart = solver.isSatisfiable(featureEffectAsCnf);
-                    
-                    if(!isCommonPart) {
-                    	mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.CONTRADICTION);
-                    }
-                    else {
-                    	boolean isVmMoreGeneral = solver.isSatisfiable(feViolationAsCnf);
-                    	
-                    	ISatSolver negatedSolver = SatSolverFactory.createSolver(varModelNegated, false);
-                    	boolean isEffectMoreGeneral = negatedSolver.isSatisfiable(featureEffectAsCnf);
-                    	
-                    	if(isVmMoreGeneral) {
-                            mismatchResult = new ConfigMismatchResult(varName, feConstraint,
-                                    isEffectMoreGeneral ? MismatchResultType.PARTIAL_OVERLAP : MismatchResultType.VM_MORE_GENERAL);
-                            
-                            if(isEffectMoreGeneral) {
-                            	//special case: check if the partial overlap is only possible when the feature is deselected; if so, change the status
-                            	Cnf featureActive = converter.convert(and(new Variable(varName), featureEffect)); // Variable AND featureEffect
-                            
-                            	if(!solver.isSatisfiable(featureActive)) {
-                            		//only possible to satisfy with the varName negated
-                                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.PARTIAL_OVERLAP_DEAD);
-                            	}
-                            }
-                    	}
-                    	else {
-                            mismatchResult = new ConfigMismatchResult(varName, feConstraint,
-                                    isEffectMoreGeneral ? MismatchResultType.FORMULA_MORE_GENERAL : MismatchResultType.CONSISTENT);
-                            
-                            if(isEffectMoreGeneral && feConstraint.toString().equals("1")) {
-                            	//special case: the SAT checks do not properly detect equivalence with a feature effect of TRUE
-                            	//find if the variable is not implying anything in the FM, and if so, return a CONSISTENT finding
-                            	if(!checkVariableHasImplications(varModel, varName)) {
-                                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.CONSISTENT);
-                            	}
-                            }
-                    	}
-                    	
-                    }
-                    
-                } catch (ConverterException e) {
-                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
-                    LOGGER.logError("Could not translate feature effect constraint for variable: "
-                        + variable.getVariable() + ", reason: " + e.getMessage());
-                } catch (SolverException e) {
-                    mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
-                    LOGGER.logError("Could not solve feature effect constraint for variable: "
-                            + variable.getVariable() + ", reason: " + e.getMessage());
-                }
+                mismatchResult = checkWithSat(varModel, varModelNegated, varName, feConstraint);
             }
             addResult(mismatchResult);
             progress.processedOne();
         }
+        
         progress.close();
     }
 
     /**
-	 * @param varModel
-	 * @param varName
-	 * @return true if the variable implies anything in the varModel 
-	 */
-	private boolean checkVariableHasImplications(Cnf varModel, String varName) {
-		if(!varModel.getAllVarNames().contains(varName)) {
-			return false;
-		}
+     * Checks the given feature effect formula for contradictions using a SAT-solver. This is the "main" part of
+     * the ConfigMismatchDetection.
+     * 
+     * @param varModel The variability model.
+     * @param varModelNegated The negated variability model.
+     * @param varName The name of the variable to check the FE for.
+     * @param feConstraint The feature effect.
+     * 
+     * @return The result of the SAT analysis.
+     */
+    private @NonNull ConfigMismatchResult checkWithSat(@NonNull Cnf varModel, @NonNull Cnf varModelNegated,
+            @NonNull String varName, @NonNull Formula feConstraint) {
+        
+        ConfigMismatchResult mismatchResult;
+        
+        try {
+            Formula featureEffect = or(not(new Variable(varName)), feConstraint); // Variable => feConstraint
+            Cnf featureEffectAsCnf = converter.convert(featureEffect);
+            
+            // NOT (Variable => feConstraint)
+            Cnf feViolationAsCnf = converter.convert(and(varName, not(feConstraint)));
+                                
+            ISatSolver solver = SatSolverFactory.createSolver(varModel, false);
+            
+            boolean isCommonPart = solver.isSatisfiable(featureEffectAsCnf);
+            
+            if (!isCommonPart) {
+                mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                        MismatchResultType.CONTRADICTION);
+            } else {
+                boolean isVmMoreGeneral = solver.isSatisfiable(feViolationAsCnf);
+                
+                ISatSolver negatedSolver = SatSolverFactory.createSolver(varModelNegated, false);
+                boolean isEffectMoreGeneral = negatedSolver.isSatisfiable(featureEffectAsCnf);
+                
+                if (isVmMoreGeneral) {
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                            isEffectMoreGeneral ? MismatchResultType.PARTIAL_OVERLAP
+                                    : MismatchResultType.VM_MORE_GENERAL);
+                    
+                    if (isEffectMoreGeneral) {
+                        // special case: check if the partial overlap is only possible when the feature is
+                        // deselected; if so, change the status
+                        
+                        // Variable AND featureEffect
+                        Cnf featureActive = converter.convert(and(new Variable(varName), featureEffect));
+                    
+                        if (!solver.isSatisfiable(featureActive)) {
+                            //only possible to satisfy with the varName negated
+                            mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                                    MismatchResultType.PARTIAL_OVERLAP_DEAD);
+                        }
+                    }
+                } else {
+                    mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                            isEffectMoreGeneral ? MismatchResultType.FORMULA_MORE_GENERAL
+                                    : MismatchResultType.CONSISTENT);
+                    
+                    if (isEffectMoreGeneral && feConstraint.toString().equals("1")) {
+                        // special case: the SAT checks do not properly detect equivalence with a feature effect
+                        // of TRUE
+                        // find if the variable is not implying anything in the FM, and if so, return a
+                        // CONSISTENT finding
+                        if (!checkVariableHasImplications(varModel, varName)) {
+                            mismatchResult = new ConfigMismatchResult(varName, feConstraint,
+                                    MismatchResultType.CONSISTENT);
+                        }
+                    }
+                }
+                
+            }
+        
+        } catch (ConverterException | SolverException e) {
+            mismatchResult = new ConfigMismatchResult(varName, feConstraint, MismatchResultType.ERROR);
+            LOGGER.logError("Could not translate feature effect constraint for variable: "
+                    + varName + ", reason: " + e.getMessage());
+        }
+        
+        return mismatchResult;
+    }
 
-		//if the variable is only occurring as non-negated in the CNF then it is not on the left side of any implication
-		for(int i=0;i<varModel.getRowCount();i++) {
-			for(CnfVariable v:varModel.getRow(i)) {
-				if(v.isNegation() && v.getName().equals(varName)) {
-					return true;
-				}
-			}
-		}
-		
-		return false;
-	}
+    /**
+     * Test if the given variable implies anything in the variability model.
+     * 
+     * @param varModel The variability model.
+     * @param varName The name of the variable to check the implication for.
+     * 
+     * @return <code>true</code> if the variable implies anything in the varModel.
+     */
+    private boolean checkVariableHasImplications(Cnf varModel, String varName) {
+        boolean result = false;
+        
+        if (varModel.getAllVarNames().contains(varName)) {
+            // if the variable is only occurring as non-negated in the CNF then it is not on the left side
+            // of any implication
+            outer: for (int i = 0; i < varModel.getRowCount(); i++) {
+                for (CnfVariable v:varModel.getRow(i)) {
+                    if (v.isNegation() && v.getName().equals(varName)) {
+                        result = true;
+                        break outer;
+                    }
+                }
+            }
+        }
+        
+        return result;
+    }
 
-	@Override
+    @Override
     public @NonNull String getResultName() {
         return "Configuration Mismatches";
     }
